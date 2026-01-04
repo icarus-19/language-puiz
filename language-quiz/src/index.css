@@ -31,3 +31,101 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* Light theme (default) */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #ecf0f1;
+  --text-primary: #2c3e50;
+  --text-secondary: #34495e;
+  --text-tertiary: #7f8c8d;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --hover-bg: #f8f9fa;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --text-primary: #e4e6eb;
+  --text-secondary: #b0b3b8;
+  --text-tertiary: #8a8d91;
+  --border-color: #3a3b3c;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --card-bg: #242526;
+  --input-bg: #3a3b3c;
+  --hover-bg: #2d2d2d;
+}
+
+/* Apply theme variables */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.App {
+  background: var(--bg-primary);
+}
+
+.home-container,
+.quiz-session,
+.quiz-results,
+.progress-tracker,
+.user-profile,
+.flashcard-review,
+.leaderboard,
+.challenge-friends {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.start-button {
+  background-color: #3498db;
+}
+
+.start-button:hover {
+  background-color: #2980b9;
+}
+
+.form-group input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.form-group input:focus {
+  border-color: #3498db;
+}
+
+/* Update all existing components to use CSS variables */
+.quiz-header,
+.results-header,
+.progress-header,
+.review-header,
+.leaderboard-header,
+.challenge-header {
+  border-bottom-color: var(--border-color);
+}
+
+.question-card,
+.answer-item,
+.friend-card,
+.language-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.option-container:hover:not(.selected) {
+  background-color: var(--hover-bg);
+  border-color: #3498db;
+}
+
+.progress-bar-container,
+.review-progress .progress-bar {
+  background-color: var(--bg-tertiary);
+}

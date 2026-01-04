@@ -1,8 +1,25 @@
 import { auth, db } from '../firebase/config';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { apiCache } from './apiCache';
 
-// Free Dictionary API
 export const fetchWordDefinition = async (word) => {
+  const cacheKey = `dictionary-${word}`;
+  
+  try {
+    // Use cached fetch with 1 hour TTL
+    const data = await apiCache.cachedFetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
+      {},
+      60 * 60 * 1000 // 1 hour
+    );
+    
+    return data[0];
+  } catch (error) {
+    console.error('Dictionary API error:', error);
+    return null;
+  }
+};
+
   try {
     const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
     if (!response.ok) throw new Error('Word not found');
@@ -12,11 +29,9 @@ export const fetchWordDefinition = async (word) => {
     console.error('Dictionary API error:', error);
     return null;
   }
-};
 
-// Google Translate API (Mock - you need real API key)
 export const translateText = async (text, targetLang) => {
-  // This is a mock. For real usage, you need Google Cloud API key
+
   const mockTranslations = {
     spanish: {
       'hello': 'hola',
