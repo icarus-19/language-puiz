@@ -1,68 +1,23 @@
-.btn {
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Variants */
-.btn-primary {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-}
-
-.btn-primary:hover:not(.disabled) {
-  background: linear-gradient(135deg, #2980b9, #21618c);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #9b59b6, #8e44ad);
-  color: white;
-  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
-}
-
-.btn-secondary:hover:not(.disabled) {
-  background: linear-gradient(135deg, #8e44ad, #7d3c98);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(155, 89, 182, 0.4);
-}
-
-/* Sizes */
+/* Add this to existing Button.css */
 .btn-small {
   padding: 8px 16px;
   font-size: 0.9rem;
 }
 
-.btn-medium {
-  padding: 12px 24px;
-  font-size: 1rem;
+/* Add this for outline button variant */
+.btn-outline {
+  background: transparent;
+  border: 2px solid #3498db;
+  color: #3498db;
 }
 
-.btn-large {
-  padding: 16px 32px;
-  font-size: 1.1rem;
-  border-radius: 10px;
+.btn-outline:hover:not(.disabled) {
+  background: #3498db;
+  color: white;
 }
 
-/* Disabled state */
-.btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* Focus state */
-.btn:focus {
-  outline: 2px solid #3498db;
-  outline-offset: 2px;
+/* Make buttons in nav look better */
+.nav .btn {
+  text-decoration: none;
+  display: inline-flex;
 }

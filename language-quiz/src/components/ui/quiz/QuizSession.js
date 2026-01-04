@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import QuizQuestion from './QuizQuestion';
 import QuizResults from './QuizResults';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import { fetchQuizQuestions, saveQuizResults } from '../../services/quizAPI';
+import { 
+  fetchQuizQuestions, 
+  saveQuizResults 
+} from '../../services/quizAPI';
+import { 
+  generateVocabularyQuestions,
+  saveQuizToFirestore 
+} from '../../services/realLanguageAPI';
 import './QuizSession.css';
 
 const QuizSession = ({ config = {} }) => {
   const { language = 'spanish', type = 'vocabulary' } = useParams();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   
   const [quizState, setQuizState] = useState({
@@ -24,7 +33,15 @@ const QuizSession = ({ config = {} }) => {
 
   const loadQuestions = async () => {
     try {
-      const questions = await fetchQuizQuestions(language, type);
+      let questions;
+      
+      // Use real API for vocabulary, mock for others
+      if (type === 'vocabulary') {
+        questions = await generateVocabularyQuestions(language, 5);
+      } else {
+        questions = await fetchQuizQuestions(language, type);
+      }
+      
       setQuizState(prev => ({
         ...prev,
         questions,
@@ -32,6 +49,7 @@ const QuizSession = ({ config = {} }) => {
       }));
     } catch (error) {
       console.error('Failed to load questions:', error);
+      // Fallback to mock questions
       setQuizState(prev => ({
         ...prev,
         questions: getFallbackQuestions(),
@@ -40,45 +58,111 @@ const QuizSession = ({ config = {} }) => {
     }
   };
 
-  const handleAnswerSelect = (selectedAnswer) => {
+  const handleAnswerSelect = async (selectedAnswer) => {
     const currentQuestion = quizState.questions[quizState.currentQuestionIndex];
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     
-    setQuizState(prev => {
-      const newScore = isCorrect ? prev.score + 1 : prev.score;
-      const newUserAnswers = [...prev.userAnswers, {
-        questionId: currentQuestion.id,
-        selectedAnswer,
-        isCorrect,
-        correctAnswer: currentQuestion.correctAnswer,
-        question: currentQuestion.question,
-        audioText: currentQuestion.audioText
-      }];
+    const newUserAnswer = {
+      questionId: currentQuestion.id,
+      selectedAnswer,
+      isCorrect,
+      correctAnswer: currentQuestion.correctAnswer,
+      question: currentQuestion.question,
+      audioText: currentQuestion.audioText
+    };
+
+    const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
+    
+    if (isLastQuestion) {
+      const newScore = isCorrect ? quizState.score + 1 : quizState.score;
+      const allAnswers = [...quizState.userAnswers, newUserAnswer];
       
-      const isLastQuestion = prev.currentQuestionIndex === prev.questions.length - 1;
-      
-      if (isLastQuestion) {
-        // Save results when quiz ends
-        saveQuizResults(language, type, newScore, prev.questions.length);
-        
-        return {
-          ...prev,
-          score: newScore,
-          userAnswers: newUserAnswers,
-          status: 'finished'
-        };
+      // Save to Firestore if user is logged in
+      if (currentUser) {
+        try {
+          await saveQuizToFirestore(currentUser.uid, {
+            language,
+            type,
+            score: newScore,
+            totalQuestions: quizState.questions.length,
+            answers: allAnswers,
+            timestamp: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error('Error saving to Firestore:', error);
+        }
       }
       
-      return {
+      // Also save to localStorage for backward compatibility
+      saveQuizResults(language, type, newScore, quizState.questions.length);
+      
+      setQuizState(prev => ({
         ...prev,
         score: newScore,
-        userAnswers: newUserAnswers,
+        userAnswers: allAnswers,
+        status: 'finished'
+      }));
+    } else {
+      setQuizState(prev => ({
+        ...prev,
+        score: isCorrect ? prev.score + 1 : prev.score,
+        userAnswers: [...prev.userAnswers, newUserAnswer],
         currentQuestionIndex: prev.currentQuestionIndex + 1
-      };
-    });
+      }));
+    }
   };
 
-  // ... rest of the file remains similar, just update the title to include type
+  const handleRestartQuiz = () => {
+    setQuizState({
+      status: 'loading',
+      questions: [],
+      currentQuestionIndex: 0,
+      score: 0,
+      userAnswers: []
+    });
+    
+    setTimeout(() => {
+      loadQuestions();
+    }, 500);
+  };
+
+  const handleBackToQuizzes = () => {
+    navigate(`/quiz/${language}`);
+  };
+
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
+  // Fallback questions in case API fails
+  const getFallbackQuestions = () => {
+    return [
+      {
+        id: 1,
+        question: `What is the ${language} word for 'hello'?`,
+        options: ["Option A", "Option B", "Option C", "Option D"],
+        correctAnswer: "Option A",
+        type: type,
+        audioText: type === 'listening' ? "Hello" : null
+      },
+      {
+        id: 2,
+        question: `Translate to ${language}: 'Thank you'`,
+        options: ["Option 1", "Option 2", "Option 3", "Option 4"],
+        correctAnswer: "Option 2",
+        type: type,
+        audioText: type === 'listening' ? "Thank you" : null
+      },
+      {
+        id: 3,
+        question: `Choose the correct ${language} grammar`,
+        options: ["Choice A", "Choice B", "Choice C", "Choice D"],
+        correctAnswer: "Choice C",
+        type: type
+      }
+    ];
+  };
+
   const currentQuestion = quizState.questions[quizState.currentQuestionIndex];
   const quizType = type.charAt(0).toUpperCase() + type.slice(1);
 
@@ -99,6 +183,9 @@ const QuizSession = ({ config = {} }) => {
         userAnswers={quizState.userAnswers}
         language={language}
         quizType={quizType}
+        onRestart={handleRestartQuiz}
+        onBackToQuizzes={handleBackToQuizzes}
+        onBackToHome={handleBackToHome}
       />
     );
   }

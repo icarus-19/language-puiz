@@ -13,11 +13,65 @@ import GrammarQuiz from './components/quiz/GrammarQuiz';
 import TranslationQuiz from './components/quiz/TranslationQuiz';
 import ListeningQuiz from './components/quiz/ListeningQuiz';
 import './App.css';
-
+import FlashcardReview from './components/flashcards/FlashcardReview';
+import Leaderboard from './components/community/Leaderboard';
+import ChallengeFriends from './components/community/ChallengeFriends';
+import app from './firebase/config';
+function Home() {
+  
+  return (
+    <>
+      <div className="home-container">
+        <h1>Master Languages with Smart Quizzes</h1>
+        <p>Interactive learning with spaced repetition, challenges, and progress tracking</p>
+        <div className="home-features">
+          <div className="feature">
+            <div className="feature-icon">🎯</div>
+            <h3>Smart Flashcards</h3>
+            <p>Spaced repetition system optimizes your learning</p>
+          </div>
+          <div className="feature">
+            <div className="feature-icon">🏆</div>
+            <h3>Compete & Learn</h3>
+            <p>Challenge friends and climb the leaderboard</p>
+          </div>
+          <div className="feature">
+            <div className="feature-icon">📈</div>
+            <h3>Track Progress</h3>
+            <p>Detailed analytics and mastery levels</p>
+          </div>
+        </div>
+        <div className="home-actions">
+          <a href="/signup" className="start-button">
+            Start Learning Free
+          </a>
+          <a href="/login" className="start-button secondary">
+            Already have account? Log In
+          </a>
+        </div>
+      </div>
+      <ProgressTracker />
+    </>
+  );
+}
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Route path="/flashcards/:language" element={
+  <PrivateRoute>
+    <FlashcardReview />
+  </PrivateRoute>
+} />
+<Route path="/leaderboard" element={
+  <PrivateRoute>
+    <Leaderboard />
+  </PrivateRoute>
+} />
+<Route path="/challenge" element={
+  <PrivateRoute>
+    <ChallengeFriends />
+  </PrivateRoute>
+} />
         <div className="App">
           <Header />
           <main className="main-content">
@@ -66,7 +120,6 @@ function App() {
             </Routes>
           </main>
         </div>
-      </Router>
     </AuthProvider>
   );
 }
